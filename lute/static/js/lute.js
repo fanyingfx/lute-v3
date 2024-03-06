@@ -65,6 +65,7 @@ function prepareTextInteractions(pos) {
 
   if (!_show_highlights()) {
     t.on('mouseover', '.word', hover_over_add_status_class);
+    t.on('mouseout', '.word', remove_status_highlights);
   }
 
   $(document).on('keydown', handle_keydown);
@@ -111,6 +112,7 @@ function showEditFrame(el, extra_args = {}) {
   // console.log('go to url = ' + url);
 
   top.frames.wordframe.location.href = url;
+  applyInitialPaneSizes();  // in resize.js
 }
 
 
@@ -241,7 +243,10 @@ function select_started(e) {
 }
 
 let get_selected_in_range = function(start_el, end_el) {
-  const [startord, endord] = [_get_order(start_el), _get_order(end_el)].sort();
+  let tmp_start = _get_order(start_el);
+  let tmp_end = _get_order(end_el);
+  // Javascript sorts numbers as strings.  wtf.
+  const [startord, endord] = [tmp_start, tmp_end].sort((a, b) => a - b);
   const selected = $('span.textitem').filter(function() {
     const ord = _get_order($(this));
     return ord >= startord && ord <= endord;
@@ -311,7 +316,7 @@ let get_textitems_spans = function(e) {
   let elements = $('span.kwordmarked, span.newmultiterm, span.wordhover');
   elements.sort((a, b) => _get_order($(a)) - _get_order($(b)));
   if (elements.length == 0)
-    return null;
+    return elements;
 
   const w = elements[0];
   const attr_name = e.shiftKey ? 'paragraph-id' : 'sentence-id';
@@ -323,12 +328,13 @@ let get_textitems_spans = function(e) {
  * color flash. */
 let handle_copy = function(e) {
   tis = get_textitems_spans(e);
-  if (tis != null)
-    copy_text_to_clipboard(tis);
+  copy_text_to_clipboard(tis);
 }
 
 let copy_text_to_clipboard = function(textitemspans) {
   const copytext = textitemspans.map(s => $(s).data('text')).join('');
+  if (copytext == '')
+    return;
 
   // console.log('copying ' + copytext);
   var textArea = document.createElement("textarea");
@@ -423,32 +429,52 @@ let _get_translation_dict_index = function(sentence) {
 }
 
 
-/** Show the translation using the next dictionary. */
-let show_sentence_translation = function(e) {
-  tis = get_textitems_spans(e);
-  if (tis == null)
+let show_translation_for_text = function(text) {
+  if (text == '')
     return;
-  const sentence = tis.map(s => $(s).data('text')).join('');
 
   if (LUTE_SENTENCE_LOOKUP_URIS.length == 0) {
     console.log('No sentence translation uris configured.');
     return;
   }
 
-  const dict_index = _get_translation_dict_index(sentence);
+  const dict_index = _get_translation_dict_index(text);
   const userdict = LUTE_SENTENCE_LOOKUP_URIS[dict_index];
-  // console.log(userdict);
 
-  const lookup = encodeURIComponent(sentence);
+  const lookup = encodeURIComponent(text);
   const url = userdict.replace('###', lookup);
   if (url[0] == '*') {
     const finalurl = url.substring(1);  // drop first char.
-    const settings = 'width=800, height=600, scrollbars=yes, menubar=no, resizable=yes, status=no';
+    let settings = 'width=800, height=600, scrollbars=yes, menubar=no, resizable=yes, status=no';
+    if (LUTE_USER_SETTINGS.open_popup_in_new_tab)
+      settings = null;
     window.open(finalurl, 'dictwin', settings);
   }
   else {
-    top.frames.dictframe.location.href = url;
+    top.frames.wordframe.location.href = url;
+    $('#read_pane_right').css('grid-template-rows', '1fr 0');
   }
+
+};
+
+
+/** Show the translation using the next dictionary. */
+let show_sentence_translation = function(e) {
+  const tis = get_textitems_spans(e);
+  const sentence = tis.map(s => $(s).data('text')).join('');
+  show_translation_for_text(sentence);
+}
+
+
+/** Translation for the full page. */
+function show_page_translation() {
+  let fulltext = $('#thetext p').map(function() {
+    return $(this).find('span.textitem').map(function() {
+      return $(this).text();
+    }).get().join('');
+  }).get().join('\n');
+  fulltext = fulltext.replace(/\u200B/g, '');
+  show_translation_for_text(fulltext);
 }
 
 

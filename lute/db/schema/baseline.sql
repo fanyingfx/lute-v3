@@ -226,12 +226,12 @@ CREATE TABLE languagedicts (
   FOREIGN KEY("LdLgID") REFERENCES "languages" ("LgID") ON UPDATE NO ACTION ON DELETE CASCADE
 );
 INSERT INTO languagedicts VALUES(1,1,'terms','embeddedhtml','https://www.arabicstudentsdictionary.com/search?q=###',1,1);
-INSERT INTO languagedicts VALUES(2,1,'terms','popuphtml','https://translate.google.com/?hl=es&sl=ar&tl=en&text=###&op=translate',1,2);
-INSERT INTO languagedicts VALUES(3,1,'sentences','popuphtml','https://translate.google.com/?hl=es&sl=ar&tl=en&text=###',1,3);
-INSERT INTO languagedicts VALUES(4,2,'terms','embeddedhtml','https://ctext.org/dictionary.pl?if=en&char=###',1,1);
+INSERT INTO languagedicts VALUES(2,1,'terms','popuphtml','https://translate.google.com/?hl=en&sl=ar&tl=en&text=###&op=translate',1,2);
+INSERT INTO languagedicts VALUES(3,1,'sentences','popuphtml','https://translate.google.com/?hl=en&sl=ar&tl=en&text=###',1,3);
+INSERT INTO languagedicts VALUES(4,2,'terms','embeddedhtml','https://www.archchinese.com/chinese_english_dictionary.html?find=###',1,1);
 INSERT INTO languagedicts VALUES(5,2,'sentences','popuphtml','https://www.deepl.com/translator#ch/en/###',1,2);
 INSERT INTO languagedicts VALUES(6,3,'terms','embeddedhtml','https://slovniky.lingea.cz/Anglicko-cesky/###',1,1);
-INSERT INTO languagedicts VALUES(7,3,'terms','embeddedhtml','https://slovnik.seznam.cz/preklad/cesky_anglicky/###',1,2);
+INSERT INTO languagedicts VALUES(7,3,'terms','popuphtml','https://slovnik.seznam.cz/preklad/cesky_anglicky/###',1,2);
 INSERT INTO languagedicts VALUES(8,3,'sentences','popuphtml','https://www.deepl.com/translator#cs/en/###',1,3);
 INSERT INTO languagedicts VALUES(9,4,'terms','embeddedhtml','https://en.thefreedictionary.com/###',1,1);
 INSERT INTO languagedicts VALUES(10,4,'terms','popuphtml','https://www.collinsdictionary.com/dictionary/english/###',1,2);
@@ -258,7 +258,7 @@ INSERT INTO languagedicts VALUES(30,12,'terms','embeddedhtml','https://es.thefre
 INSERT INTO languagedicts VALUES(31,12,'terms','popuphtml','https://www.wordreference.com/es/en/translation.asp?spen=###',1,2);
 INSERT INTO languagedicts VALUES(32,12,'sentences','popuphtml','https://www.deepl.com/translator#es/en/###',1,3);
 INSERT INTO languagedicts VALUES(33,13,'terms','embeddedhtml','https://www.wordreference.com/tren/###',1,1);
-INSERT INTO languagedicts VALUES(34,13,'terms','embeddedhtml','https://tr.wiktionary.org/###',1,2);
+INSERT INTO languagedicts VALUES(34,13,'terms','embeddedhtml','https://tr.wiktionary.org/wiki/###',1,2);
 INSERT INTO languagedicts VALUES(35,13,'sentences','popuphtml','https://www.deepl.com/translator#tr/en/###',1,3);
 CREATE TABLE IF NOT EXISTS "languages" (
 	"LgID" INTEGER NOT NULL  ,

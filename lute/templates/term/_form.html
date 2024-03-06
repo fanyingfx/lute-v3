@@ -1,3 +1,5 @@
+<script type="text/javascript" src="{{ url_for('static', filename='js/dict-tabs.js') }}" charset="utf-8"></script>
+
 {% for field_name, field_errors in form.errors.items() %}
 {% for error in field_errors %}
 <div class="flash-notice-narrow">{{ error }}</div>
@@ -55,22 +57,12 @@
           {% if term.id %}
           <button id="delete" type="button" class="btn" onclick="deleteTerm()">Delete</button>
           {% endif %}
-          <button id="submit" type="submit" class="btn btn-primary">Save</button>
+          <button id="submit" type="submit" title="Shortcut: Control+Enter" class="btn btn-primary">Save</button>
       </div>
     </div>
   </form>
 </div>
 
-<script>
-  // this is used in formframes.html
-  const ALL_DICTS = {{ language_dicts | safe }};
-  const TERM_FORM_CONTAINER = document.getElementById("term-form-container");
-  let TERM_DICTS;
-  let LANG_ID;
-</script>
-
-<!-- do not defer. if deferred it gets loaded at the end of formframes. bu we need it to load after _form, but before formframes -->
-<script type="text/javascript" src="{{ url_for('static', filename='js/dict-tabs.js') }}" charset="utf-8"></script>
 
 <script type="text/javascript">
 
@@ -307,8 +299,15 @@
 
   $(document).ready(function () {
 
-    /** TERM IMAGE *************************/
+    // "Save" shortcut
+    $(document).keydown(function(event) {
+      console.log(event);
+      if (event.ctrlKey && event.key === "Enter") {
+        $("#submit").click();
+      }
+    });
 
+    // Term image events.
     var term_image = $("#term_image");
 
     term_image.hover(
@@ -342,7 +341,8 @@
     window.parent.postMessage({ event: "LuteTermFormOpened" }, "*");
 
     enable_disable_sync_status_checkbox();
-  });
+  });  // end $(document).ready
+
 
   function deleteTerm() {
     const msg = "Are you sure you want to delete this term?\n\n" +
@@ -352,8 +352,8 @@
 
     $.post("/term/delete/{{ term.id }}", function( data ) {
       if ("{{ embedded_in_reading_frame }}" == "True") {
-        // If on reading page, reload page
-        parent.location.reload();
+        window.parent.postMessage({ event: "LuteTermFormPosted" }, "*");
+        window.parent.document.getElementById('wordframeid').src = 'about:blank';
       }
       else {
         // If on term page, go to term listing

@@ -1,4 +1,50 @@
 
+# 3.2.4 (2024-03-03)
+
+Feature changes:
+
+* #53: add "don't stop audio on term click" setting
+* #295: add "open popups in new tab" setting
+* #256: add "translate full page" reading menu link
+* #209: Ctrl+Enter hotkey saves Term form while reading
+* Fix Arabic and Chinese default dicts.  By @imamcr in #296, #298
+* #199: Add delete audio button for book.
+* #250: allow hide some book columns in listing.
+* #288: open pop-up dictionary if it's the first dictionary specified
+
+Bugfixes:
+
+* #300: include pronunciation in csv export.
+
+Back end changes:
+
+* Update datatables to 2.0.1, include colvis.
+* #289: make global js vars' relation to class explicit.
+
+
+# 3.2.3 (2024-02-25)
+
+Feature changes:
+
+* #31: Using page break markers ("---") during new book creation only to force page breaks.
+* #133: Set "current language" filter (and setting) from home page.
+* #14: Allow term image uploads from keyboard or paste from clipboard.
+* Add LWT and LingQ themes.  From @imamcr in #285.
+* Fix touch-drag problem for mobile.  From @webofpies in #286.
+* Small bug fixes.
+
+
+# 3.2.2 (2024-02-21)
+
+Feature changes:
+
+* Move 'Export CSV' into term Actions menu.
+* Issue #271: Fix multiword select in some text locations
+* Issue #240: Use datatables for language listing.
+* Issue #221: Don't scroll reading pane on term delete.
+* Issue #269: Fix embedded translation dict.
+
+
 # 3.2.1 (2024-02-19)
 
 Feature changes:

@@ -1,17 +1,36 @@
+<!-- The default language selector.  This is moved into the datatables toolbar during setup. -->
+<select id="defaultLanguageSelect" class="dataTables_filter" title="Default language">
+  {% for lang_choice in language_choices %}
+    <option value="{{ lang_choice[0] }}">{{ lang_choice[1] }}</option>
+  {% endfor %}
+</select>
+
 <table id="booktable" class="table dataTable stripe">
   <thead>
     <tr>
-      <th>Title</th>
-      <th>Language</th>
-      <th>Tags</th>
-      <th>Word count</th>
-      <th>Statuses
+      <th style="text-align: left">Title</th>
+      <th style="text-align: left">Language</th>
+      <th style="text-align: left">Tags</th>
+      <th style="text-align: left">Word count</th>
+      <th style="text-align: left">Statuses
         <a href="/refresh_all_stats" class="refresh" title="Refresh stats for all books"></a>
       </th>
-      <th>Actions</th>
+      <th style="text-align: left">Actions</th>
     </tr>
   </thead>
 </table>
+
+<!-- the config widget for datatables.  Moved into the datatables table footer during setup. -->
+<div id="datatables_config_widget">
+  <img
+    src="{{ url_for('static', filename='icn/settings-gear-icon.svg') }}"
+    title="configuration"
+    id="datatables_config_toggle"
+    style="width: 1rem"
+    />
+</div>
+
+<div id="datatables_config_items" style="display: none;"></div>
 
 {# Hidden form for archive, unarchive, delete. #}
 <form id="actionposter" method="post" action="">
@@ -22,8 +41,37 @@
   /* The book listing. */
   var book_listing_table;
 
-  let setup_text_datatable = function(initial_search) {
+  let setup_book_datatable = function(initial_search) {
     book_listing_table = $('#booktable').DataTable({
+      layout: {
+        topStart: 'pageLength',
+        topEnd: [
+          function() {
+            return $('#defaultLanguageSelect');
+          },
+          'search'
+        ],
+        bottomStart: [
+          function() {
+            return $('#datatables_config_widget');
+          },
+          {
+            info: {
+              callback: function (s, start, end, max, total, result) {
+                return `${start} to ${end} of ${max}`;
+              }
+            }
+          },
+          'buttons'
+        ],
+        bottomEnd: 'paging'
+      },
+      buttons: [
+        {
+          extend: 'colvis',
+          columns: '.colVisToggled'
+        }
+      ],
       {% if status != 'Archived' %}
       "language": {
             "emptyTable": "No books available. <a href='/book/new'>Create one?</a>"
@@ -41,14 +89,14 @@
       stateSave: true,
       search: { search: initial_search },
       columnDefs: [
-        { "name": "BkTitle", "targets": 0, "width": "40%", "render": render_book_title },
-        { "name": "LgName", "targets": 1, "width": "10%" },
-        { "name": "TagList", "targets": 2, "width": "10%" },
-        { "name": "WordCount", "targets": 3, "width": "10%" },
-        { "name": "UnknownPercent", "targets": 4, "data": null, "searchable": true, "orderable": true, "render": render_book_stats_graph },
-        { "targets": 5, "data": null, "width": "8%", "searchable": false, "orderable": false, "render": render_book_actions },
+        { "name": "BkTitle", "targets": 0, "width": "40%", "render": render_book_title, className: "colVisToggled" },
+        { "name": "LgName", "targets": 1, "width": "10%", className: "colVisToggled" },
+        { "name": "TagList", "targets": 2, "width": "10%", className: "colVisToggled" },
+        { "name": "WordCount", "targets": 3, "width": "10%", className: "colVisToggled" },
+        { "name": "UnknownPercent", "targets": 4, "data": null, "searchable": true, "orderable": true, "render": render_book_stats_graph, className: "colVisToggled" },
+        { "targets": 5, "data": null, "width": "8%", "searchable": false, "orderable": false, "render": render_book_actions, className: "colVisToggled" },
 
-        /* Extra data that is returned in the row for rendering, but not shown. */
+        /* Extra data that is returned in the row for rendering, but not shown, not changed by colvis. */
         { "name": "BkID", "targets": 6, "data": null, "visible": false },
         { "name": "BkArchived", "targets": 7, "data": null, "visible": false },
         { "name": "PageCount", "targets": 8, "data": null, "visible": false },
@@ -60,18 +108,64 @@
       // Ajax call
       ajax: {
         url: "/book/datatables/{{ status or 'active' }}",
+        // Additional filters.  func calls are required to get the
+        // current filter field values.  These are included in the
+        // data sent to the controller.
+        data: {
+          filtLanguage: () => $("#defaultLanguageSelect").val(),
+        },
+
         type: "POST",
         dataType: "json"
       },
 
     });
 
-  } // end setup_text_datatable
+    // var dropdown = $('#defaultLanguageSelect');
+    // $('div.toolbar').append(dropdown);
+  } // end setup_book_datatable
 
+
+  let setup_language_filter = function(current_language_id = 0) {
+    const dropdown = $('#defaultLanguageSelect');
+    dropdown.val(current_language_id);
+    const lang_count = $("#defaultLanguageSelect option").length;
+    if (lang_count == 1) {
+      dropdown.css("display", "none");
+    }
+
+    dropdown.on('change', function() {
+      const langid = $(this).val();
+      $.post(`/settings/set/current_language_id/${langid}`);
+      $('#booktable').DataTable().draw();
+    });
+  };
+
+
+  let move_datatables_controls_to_config_widget = function() {
+    const widget = $('#datatables_config_items');
+    const append_children = [ '.dt-buttons', '.dt-length' ];
+    for (let c of append_children) {
+      const el = $(`div${c}`);
+      el.css({ padding: '0.2rem', margin: '0rem', display: 'inline' });
+      widget.append(el);
+    }
+  }
 
   $(document).ready(function () {
-    setup_text_datatable("{{ initial_search or '' }}");
+    const current_language_id = {{ current_language_id }};
+    // Language filter is set up first, because its value
+    // is used during the initial datatable draw.
+    setup_language_filter(current_language_id);
+    setup_book_datatable("{{ initial_search or '' }}");
+
+    move_datatables_controls_to_config_widget();
+
+    $("#datatables_config_toggle").click(function() {
+      $("#datatables_config_items").toggle();
+    });
   });
+
 
   function do_action_post(action, bookid) {
     let f = $('#actionposter');

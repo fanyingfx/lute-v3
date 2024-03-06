@@ -18,7 +18,6 @@ def test_smoke_test(chromebrowser, luteclient):
     luteclient.click_word_fill_form("Adios", {"status": "2", "translation": "goodbye"})
 
     displayed = luteclient.displayed_text()
-    breakpoint()
     assert "Hola (1)/. /Adios (2)/ /amigo (1)/." == displayed
 
 

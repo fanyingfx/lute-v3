@@ -48,6 +48,9 @@ class UserSettingsForm(FlaskForm):
     show_highlights = BooleanField("Highlight terms by status")
     show_reading = BooleanField("Show Pronunciation")
 
+    open_popup_in_new_tab = BooleanField("Open popup in new tab")
+    stop_audio_on_term_form_open = BooleanField("Stop audio on term form open")
+
     mecab_path = StringField("MECAB_PATH environment variable")
     reading_choices = [
         ("katakana", "Katakana"),
@@ -105,11 +108,9 @@ def edit_settings():
     for field in form:
         if field.id != "csrf_token":
             field.data = UserSetting.get_value(field.id)
-    # Hack: set boolean settings to ints, otherwise they're always checked.
-    form.backup_warn.data = int(form.backup_warn.data or 0)
-    form.backup_auto.data = int(form.backup_auto.data or 0)
-    form.show_highlights.data = int(form.show_highlights.data or 0)
-    form.show_reading.data = int(form.show_reading.data or 0)
+        if isinstance(field, BooleanField):
+            # Hack: set boolean settings to ints, otherwise they're always checked.
+            field.data = int(field.data or 0)
 
     return render_template("settings/form.html", form=form)
 
@@ -142,6 +143,21 @@ def test_parse():
     finally:
         UserSetting.set_value("mecab_path", old_setting)
 
+    return jsonify(result)
+
+
+@bp.route("/set/<key>/<value>", methods=["POST"])
+def set_key_value(key, value):
+    "Set a UserSetting key to value."
+    old_value = UserSetting.get_value(key)
+    try:
+        UserSetting.set_value(key, value)
+        result = {"result": "success", "message": "OK"}
+    except Exception as e:  # pylint: disable=broad-exception-caught
+        message = f"{type(e).__name__}: { str(e) }"
+        UserSetting.set_value(key, old_value)
+        result = {"result": "failure", "message": message}
+    db.session.commit()
     return jsonify(result)
 
 
