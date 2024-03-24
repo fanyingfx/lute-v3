@@ -14,14 +14,11 @@ from pypinyin import pinyin
 from lute.parse.base import AbstractParser
 from lute.parse.base import ParsedToken
 import importlib
-from hanlp.utils import log_util
 
 from cachetools import cached
 from cachetools.keys import hashkey
 
 from lute.parse.user_dicts import load_from_db, load_from_file
-
-log_util.enable_debug(False)
 
 # CHINESE_PUNCTUATIONS = (
 #     r"！？｡。＂＃＄％＆＇（）＊＋，－／：；＜＝＞＠［＼］＾＿｀｛｜｝～｟｠｢｣､、〃》「」『』【】〔〕〖〗〘〙〚〛〜〝〞〟〰〾〿–—‘’‛“”„‟…‧﹏.\n"
