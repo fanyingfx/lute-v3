@@ -90,6 +90,11 @@ def create_backup(app_config, settings, is_manual=False, suffix=None):
     if not os.path.exists(settings.backup_dir):
         raise BackupException("Missing directory " + settings.backup_dir)
 
+    ### Timing helper for when implement audio backup.
+    # def _print_now(msg):
+    #     now = datetime.now().strftime("%H-%M-%S")
+    #     print(f"{now} - {msg}", flush=True)
+
     _mirror_images_dir(app_config.userimagespath, settings.backup_dir)
 
     prefix = "manual_" if is_manual else ""
@@ -125,8 +130,8 @@ def backup_warning(backup_settings):
     if not backup_settings.backup_warn:
         return ""
 
-    have_books = len(db.session.query(Book).all()) > 0
-    have_terms = len(db.session.query(Term).all()) > 0
+    have_books = db.session.query(db.session.query(Book).exists()).scalar()
+    have_terms = db.session.query(db.session.query(Term).exists()).scalar()
     if have_books is False and have_terms is False:
         return ""
 
@@ -148,7 +153,7 @@ def _create_db_backup(dbfilename, backupfile):
     shutil.copy(dbfilename, backupfile)
     f = f"{backupfile}.gz"
     with open(backupfile, "rb") as in_file, gzip.open(
-        f, "wb", compresslevel=9
+        f, "wb", compresslevel=4
     ) as out_file:
         shutil.copyfileobj(in_file, out_file)
     os.remove(backupfile)

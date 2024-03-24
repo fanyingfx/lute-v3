@@ -4,17 +4,12 @@
 
 from datetime import datetime
 from flask import Blueprint, flash, request, render_template, redirect, jsonify
-from lute.read.service import (
-    get_paragraphs,
-    set_unknowns_to_known,
-)
-from lute.parse.user_dicts import update_user_dict
+from lute.read.service import set_unknowns_to_known, start_reading, get_popup_data
 from lute.read.forms import TextForm
 from lute.read.service import start_reading
 from lute.term.model import Repository, find_lang
 from lute.term.routes import handle_term_form
 from lute.models.book import Book, Text
-from lute.models.term import Term as DBTerm
 from lute.models.setting import UserSetting
 from lute.db import db
 
@@ -99,6 +94,56 @@ def page_done():
     return jsonify("ok")
 
 
+@bp.route("/delete_page/<int:bookid>/<int:pagenum>", methods=["GET"])
+def delete_page(bookid, pagenum):
+    """
+    Delete page.
+    """
+    book = Book.find(bookid)
+    if book is None:
+        flash(f"No book matching id {bookid}")
+        return redirect("/", 302)
+
+    if len(book.texts) == 1:
+        flash("Cannot delete only page in book.")
+    else:
+        book.remove_page(pagenum)
+        db.session.add(book)
+        db.session.commit()
+
+    url = f"/read/{bookid}/page/{pagenum}"
+    return redirect(url, 302)
+
+
+@bp.route("/new_page/<int:bookid>/<position>/<int:pagenum>", methods=["GET", "POST"])
+def new_page(bookid, position, pagenum):
+    "Create a new page."
+    form = TextForm()
+    book = Book.find(bookid)
+
+    if form.validate_on_submit():
+        t = None
+        if position == "before":
+            t = book.add_page_before(pagenum)
+        else:
+            t = book.add_page_after(pagenum)
+        t.book = book
+        t.text = form.text.data
+        db.session.add(book)
+        db.session.commit()
+
+        book.current_tx_id = t.id
+        db.session.add(book)
+        db.session.commit()
+
+        return redirect(f"/read/{book.id}", 302)
+
+    text_dir = "rtl" if book.language.right_to_left else "ltr"
+    return render_template(
+        "read/page_edit_form.html", hide_top_menu=True, form=form, text_dir=text_dir
+    )
+
+
 @bp.route("/save_player_data", methods=["post"])
 def save_player_data():
     "Save current player position, bookmarks.  Called on a loop by the player."
@@ -158,45 +203,16 @@ def term_popup(termid):
     """
     Show a term popup for the given DBTerm.
     """
-    term = DBTerm.query.get(termid)
-
-    term_tags = [tt.text for tt in term.term_tags]
-
-    def make_array(t):
-        ret = {
-            "term": t.text,
-            "roman": t.romanization,
-            "trans": t.translation if t.translation else "-",
-            "tags": [tt.text for tt in t.term_tags],
-        }
-        return ret
-
-    parent_terms = [p.text for p in term.parents]
-    parent_terms = ", ".join(parent_terms)
-
-    parent_data = []
-    if len(term.parents) == 1:
-        parent = term.parents[0]
-        if parent.translation != term.translation:
-            parent_data.append(make_array(parent))
-    else:
-        parent_data = [make_array(p) for p in term.parents]
-
-    images = [term.get_current_image()] if term.get_current_image() else []
-    for p in term.parents:
-        if p.get_current_image():
-            images.append(p.get_current_image())
-
-    images = list(set(images))
-
+    d = get_popup_data(termid)
     return render_template(
         "read/termpopup.html",
-        term=term,
-        flashmsg=term.get_flash_message(),
-        term_tags=term_tags,
-        term_images=images,
-        parentdata=parent_data,
-        parentterms=parent_terms,
+        term=d["term"],
+        flashmsg=d["flashmsg"],
+        term_tags=d["term_tags"],
+        term_images=d["term_images"],
+        parentdata=d["parentdata"],
+        parentterms=d["parentterms"],
+        componentdata=d["components"],
     )
 
 

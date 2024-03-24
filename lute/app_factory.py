@@ -44,7 +44,6 @@ from lute.bing.routes import bp as bing_bp
 from lute.userimage.routes import bp as userimage_bp
 from lute.useraudio.routes import bp as useraudio_bp
 from lute.termimport.routes import bp as termimport_bp
-from lute.term_parent_map.routes import bp as term_parent_map_bp
 from lute.backup.routes import bp as backup_bp
 from lute.dev_api.routes import bp as dev_api_bp
 from lute.settings.routes import bp as settings_bp
@@ -123,13 +122,10 @@ def _add_base_routes(app, app_config):
         language_choices = lute.utils.formutils.language_choices("(all languages)")
         current_language_id = lute.utils.formutils.valid_current_language_id()
 
+        should_run_auto_backup = backupservice.should_run_auto_backup(bkp_settings)
         # Only back up if we have books, otherwise the backup is
         # kicked off when the user empties the demo database.
-        if (
-            is_production
-            and have_books
-            and backupservice.should_run_auto_backup(bkp_settings)
-        ):
+        if is_production and have_books and should_run_auto_backup:
             return redirect("/backup/backup", 302)
 
         refresh_stats()
@@ -315,7 +311,6 @@ def _create_app(app_config, extra_config):
     app.register_blueprint(userimage_bp)
     app.register_blueprint(useraudio_bp)
     app.register_blueprint(termimport_bp)
-    app.register_blueprint(term_parent_map_bp)
     app.register_blueprint(backup_bp)
     app.register_blueprint(settings_bp)
     app.register_blueprint(themes_bp)

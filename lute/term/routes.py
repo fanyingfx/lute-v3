@@ -84,6 +84,7 @@ def export_terms():
         "language",
         "tags",
         "OMIT_status_text",
+        "added",
         "OMIT_WoID",
         "OMIT_LgID",
         "OMIT_ImageSource",
@@ -185,13 +186,12 @@ def handle_term_form(
     )
 
 
-def _handle_form(term, repo):
+def _handle_form(term, repo, redirect_to="/term/index"):
     """
-    Handle the form post.  Only show lang. selector
-    for new terms.
+    Handle the form post, redirecting to specified url.
     """
     return handle_term_form(
-        term, repo, "/term/formframes.html", redirect("/term/index", 302)
+        term, repo, "/term/formframes.html", redirect(redirect_to, 302)
     )
 
 
@@ -222,7 +222,7 @@ def new():
     """
     repo = Repository(db)
     term = Term()
-    return _handle_form(term, repo)
+    return _handle_form(term, repo, "/term/new")
 
 
 @bp.route("/search/<text>/<int:langid>", methods=["GET"])

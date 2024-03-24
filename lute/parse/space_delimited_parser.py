@@ -27,9 +27,13 @@ class SpaceDelimitedParser(AbstractParser):
 
     def get_parsed_tokens(self, text: str, language) -> List[ParsedToken]:
         "Return parsed tokens."
+
+        # Remove extra spaces.
         clean_text = re.sub(r" +", " ", text)
-        zws = chr(0x200B)  # zero-width space
-        clean_text = clean_text.replace(zws, "")
+
+        # Remove zero-width spaces.
+        clean_text = clean_text.replace(chr(0x200B), "")
+
         return self._parse_to_tokens(clean_text, language)
 
     def preg_match_capture(self, pattern, subject):
