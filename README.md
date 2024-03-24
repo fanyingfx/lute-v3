@@ -18,7 +18,7 @@ At first, you should Install Python and [activate virtual environment](./README_
 After the virtual environment activated, you could use  command
 
 ```
-pip install https://github.com/fanyingfx/lute-v3/releases/download/3.1.2b1/lute3-3.1.2b1-py3-none-any.whl --upgrade
+pip install https://github.com/fanyingfx/lute-v3/releases/download/3.2.7/lute3-3.2.7-py3-none-any.whl --upgrade
 ```
 to install the lute supporting Chinese.
 
